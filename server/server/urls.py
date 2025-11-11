@@ -16,8 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from login import views as login_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/login/', include('login.urls')),
+    # Root/home page
+    path('', login_views.home, name='home'),
+    # Include allauth URLs for account and social auth (provider URL names like 'github_login')
+    path('accounts/', include('allauth.urls')),
+
+    # Local overrides / custom pages for login/logout
+    path('accounts/', include('login.urls')),
 ]

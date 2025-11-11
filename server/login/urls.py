@@ -4,6 +4,7 @@ from . import views
 app_name = "login"
 
 urlpatterns = [
-    path('login_with_github/', views.login_with_github, name='login_with_github'),
+    # Custom simple login/logout pages
+    path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
 ]
