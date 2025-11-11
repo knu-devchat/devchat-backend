@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import logout as auth_logout
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
+from urllib.parse import urlencode
 
 
 # Create your views here.
@@ -18,3 +20,25 @@ def logout(request):
 
 def home(request):
     return render(request, 'index.html')
+
+
+def github_auth_url(request):
+    next_url = request.GET.get('next', '/')
+    # allauth registers the provider login name as 'github_login'
+    login_path = reverse('github_login')
+    params = {'process': 'login'}
+    if next_url:
+        params['next'] = next_url
+    qs = urlencode(params)
+    full = request.build_absolute_uri(login_path) + ('?' + qs if qs else '')
+    return JsonResponse({'login_url': full})
+
+
+def logout_url(request):
+    try:
+        logout_path = reverse('account_logout')
+    except Exception:
+        # fallback to our local logout path
+        logout_path = reverse('login:logout') if False else '/accounts/logout/'
+    full = request.build_absolute_uri(logout_path)
+    return JsonResponse({'logout_url': full})
