@@ -1,8 +1,19 @@
 import json
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
+from django.shortcuts import get_object_or_404
 from .models import SecureData, ChatRoom
+from .crypto_utils import decrypt_aes_gcm
+from django.conf import settings
+from functools import lru_cache
 
+# 마스터키 가져오기
+@lru_cache(maxsize=1)
+def get_master_key() -> bytes:
+    key = getattr(settings, "MASTER_KEY", None)
+    if key is None:
+        raise RuntimeError("MASTER_KEY not configured in settings")
+    return key
 
 # POST 요청으로 서버에 room_name 전달
 def load_room_name(request):
@@ -34,3 +45,18 @@ def save_room_secret_key(room_name: str, encrypted: str):
         return HttpResponseServerError("failed to save room and secret")
 
     return room
+
+def get_room_secret(room_id):
+    room = get_object_or_404(ChatRoom, room_id=room_id)
+    secure = SecureData.objects.filter(room=room).order_by("-created_at").first()
+    if not secure:
+        return None
+    
+    try:
+        master_key = get_master_key()
+        secret_bytes = decrypt_aes_gcm(master_key, secure.encrypted_value)
+        secret = secret_bytes.decode()
+    except Exception:
+        return None
+
+    return secret

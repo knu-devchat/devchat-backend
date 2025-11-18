@@ -1,5 +1,6 @@
 import base64
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from .utils import get_master_key
 import pyotp
 from os import environ
 from secrets import token_bytes
@@ -15,20 +16,17 @@ def generate_pseudo_number():
     return master_key, secret_key, iv
 
 # AES-GCM 암호화 및 Base64 인코딩
-def encrypt_aes_gcm(master_key: bytes, secret_key: bytes, iv: bytes) -> str:
+def encrypt_aes_gcm(secret_key: bytes, iv: bytes) -> str:
+    master_key = get_master_key()
     aesgcm = AESGCM(master_key)
     ciphertext = aesgcm.encrypt(iv, secret_key, None)
-
-    encrypted_blob = iv + ciphertext
-    return base64.b64encode(encrypted_blob).decode()
+    return base64.b64encode(iv + ciphertext).decode()
 
 # Base64 디코딩 및 AES-GCM 복호화
-def decrypt_aes_gcm(master_key: bytes, b64_data: str) -> bytes:
-    aesgcm = AESGCM(master_key)
+def decrypt_aes_gcm(b64_data: str) -> bytes:
+    master_key = get_master_key()
     data = base64.b64decode(b64_data)
-
     iv = data[:12]
     ciphertext = data[12:]
-
-    secret_key = aesgcm.decrypt(iv, ciphertext, None)
-    return secret_key
+    aesgcm = AESGCM(master_key)
+    return aesgcm.decrypt(iv, ciphertext, None)

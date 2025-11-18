@@ -1,6 +1,7 @@
 from django.shortcuts import render
-from .crypto_utils import encrypt_aes_gcm, decrypt_aes_gcm, generate_pseudo_number
-from .utils import load_room_name, save_room_secret_key
+import pyotp
+from .crypto_utils import encrypt_aes_gcm, generate_pseudo_number
+from .utils import load_room_name, save_room_secret_key, get_room_secret
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
 from django.views.decorators.http import require_POST, require_GET
 
@@ -17,10 +18,10 @@ def create_chat_room(request):
     room_name = load_room_name(request)
 
     # 2. 의사 난수 생성
-    master_key, secret_key, iv = generate_pseudo_number()
+    secret_key, iv = generate_pseudo_number()
 
     # 3. 채팅방 고유 비밀키 암호화
-    encrypted = encrypt_aes_gcm(master_key, secret_key, iv)
+    encrypted = encrypt_aes_gcm(secret_key, iv)
 
     # 4. 채팅방 고유 비밀키 DB에 저장
     room_or_resp = save_room_secret_key(room_name, encrypted)
@@ -33,14 +34,19 @@ def create_chat_room(request):
     return JsonResponse({"room_id": room.room_id, "room_name": room.room_name})
 
 
-def generate_TOTP():
+def generate_TOTP(request, room_id):
     """
     req: 채팅방 생성 완료 -> 6자리 코드 필요
     res: 6자리 코드 반환
     """
-    # 1. DB에서 비밀키 복호화하여 가져오기
-
+    # 1. DB에서 비밀키 가져와서 복호화
+    secret = get_room_secret(room_id)
+    if secret is None:
+        return HttpResponseNotFound("secret not found")
+    
     # 2. 가져온 비밀키로 totp 생성
+    totp = pyotp.TOTP(secret)
+    code = totp.now()
 
     # 3. totp 프론트엔드로 반환
-
+    return JsonResponse({"totp": code, "interval": totp.interval})
