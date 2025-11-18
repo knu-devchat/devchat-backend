@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # local apps
     'login',
+    'llm',
 
     # allauth 관련 (github oauth 설정에 필요)
     'allauth',
