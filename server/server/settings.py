@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
-import os
+import os, base64
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,6 +25,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+_MASTER_KEY_B64 = os.environ.get("MASTER_KEY_B64")
+if not _MASTER_KEY_B64:
+    raise RuntimeError("MASTER_KEY_B64 is not set")
+
+try:
+    MASTER_KEY = base64.b64decode(_MASTER_KEY_B64)
+except Exception as e:
+    raise RuntimeError("MASTER_KEY_B64 is not valid base64") from e
+
+if len(MASTER_KEY) not in (16, 24, 32):
+    raise RuntimeError("MASTER_KEY must decode to 16/24/32 bytes")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
