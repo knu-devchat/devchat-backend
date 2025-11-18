@@ -3,6 +3,7 @@ from secrets import token_bytes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from os import environ
 from dotenv import load_dotenv
+from .models import SecureData
 import pyotp
 from django.shortcuts import render
 
@@ -17,10 +18,7 @@ def init_chat_room():
     secret_key = token_bytes(32) # 채팅방 고유 비밀키
     iv = token_bytes(12) # 초기화 벡터 (12 Bytes 권장)
 
-    ciphertext = encrypt_aes_gcm(master_key, secret_key, iv) # AES-GCM 암호화
-    # ciphertext를 DB에 저장
-
-    print(f"cipher: {ciphertext}")
+    encrypted = encrypt_aes_gcm(master_key, secret_key, iv) # AES-GCM 암호화
 
 
 def generate_TOTP():
@@ -33,7 +31,12 @@ def create_chat_room():
     """
     채팅방 생성 완료. 채팅방에 대한 정보가 DB에 저장됨.
     """
-    pass
+    # ciphertext를 DB에 저장
+    SecureData.objects.create(
+        chat_name="testname",
+        chat_id=1,
+        encrypted_value=encrypted
+    )
 
 # AES-GCM 암호화 및 Base64 인코딩
 def encrypt_aes_gcm(master_key: bytes, plaintext: bytes, iv: bytes) -> str:
