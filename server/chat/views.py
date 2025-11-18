@@ -1,58 +1,42 @@
-import base64
-from secrets import token_bytes
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from os import environ
-from dotenv import load_dotenv
-from .models import SecureData
-import pyotp
 from django.shortcuts import render
-
-load_dotenv()
+from .crypto_utils import encrypt_aes_gcm, decrypt_aes_gcm, generate_pseudo_number
+from .utils import load_room_name, save_room_secret_key
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
+from django.views.decorators.http import require_POST, require_GET
 
 # Create your views here.
-def init_chat_room():
+@require_POST
+def create_chat_room(request):
     """
-    채팅방 생성 클릭 시 채팅방 고유 비밀키 생성
+    req: room_name 전달
+    res:
+        - DB ChatRoom에 room_id, room_name 저장
+        - DB SecureData에 암호화된 채팅방 비밀키 저장
     """
-    master_key = environ.get('MASTER_KEY')
-    secret_key = token_bytes(32) # 채팅방 고유 비밀키
-    iv = token_bytes(12) # 초기화 벡터 (12 Bytes 권장)
+    # 1. 채팅방 이름 전달
+    room_name = load_room_name(request)
 
-    encrypted = encrypt_aes_gcm(master_key, secret_key, iv) # AES-GCM 암호화
+    # 2. 의사 난수 생성
+    master_key, secret_key, iv = generate_pseudo_number()
+
+    # 3. 채팅방 고유 비밀키 암호화
+    encrypted = encrypt_aes_gcm(master_key, secret_key, iv)
+
+    # 4. 채팅방 고유 비밀키 DB에 저장
+    room_or_resp = save_room_secret_key(room_name, encrypted)
+    if hasattr(room_or_resp, "status_code"):
+        # save_room_secret_key가 HttpResponse(에러)를 반환한 경우 그대로 반환
+        return room_or_resp
+
+    # 성공: room_or_resp는 ChatRoom 인스턴스
+    room = room_or_resp
+    return JsonResponse({"room_id": room.room_id, "room_name": room.room_name})
 
 
 def generate_TOTP():
     """
-    채팅방 고유 비밀키로 TOTP 생성
+    req: 채팅방 생성 완료 -> 6자리 코드 필요
+    res: 6자리 코드 반환
     """
     pass
 
-def create_chat_room():
-    """
-    채팅방 생성 완료. 채팅방에 대한 정보가 DB에 저장됨.
-    """
-    # ciphertext를 DB에 저장
-    SecureData.objects.create(
-        chat_name="testname",
-        chat_id=1,
-        encrypted_value=encrypted
-    )
-
-# AES-GCM 암호화 및 Base64 인코딩
-def encrypt_aes_gcm(master_key: bytes, plaintext: bytes, iv: bytes) -> str:
-    aesgcm = AESGCM(master_key)
-    ciphertext = aesgcm.encrypt(iv, plaintext, None)
-
-    encrypted_blob = iv + ciphertext
-    return base64.b64encode(encrypted_blob).decode()
-
-# Base64 디코딩 및 AES-GCM 복호화
-def decrypt_aes_gcm(master_key: bytes, b64_data: str) -> bytes:
-    aesgcm = AESGCM(master_key)
-    data = base64.b64decode(b64_data)
-
-    iv = data[:12]
-    ciphertext = data[12:]
-
-    secret_key = aesgcm.decrypt(iv, ciphertext, None)
-    return secret_key
