@@ -3,7 +3,6 @@ from django.db import IntegrityError, transaction
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
 from django.shortcuts import get_object_or_404
 from .models import SecureData, ChatRoom
-from .crypto_utils import decrypt_aes_gcm
 from django.conf import settings
 from functools import lru_cache
 
@@ -55,8 +54,11 @@ def get_room_secret(room_id):
     
     try:
         master_key = get_master_key()
-        secret_bytes = decrypt_aes_gcm(master_key, secure.encrypted_value)
-        secret = secret_bytes.decode()
+        # import crypto function locally to avoid circular imports at module import time
+        from .crypto_utils import decrypt_aes_gcm
+
+        secret_bytes = decrypt_aes_gcm(secure.encrypted_value)
+        secret = secret_bytes.decode('utf-8')
     except Exception:
         return None
 
