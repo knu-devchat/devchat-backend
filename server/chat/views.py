@@ -1,9 +1,10 @@
-from django.shortcuts import render
 import pyotp
 from .crypto_utils import encrypt_aes_gcm, generate_pseudo_number
+from .models import ChatRoom
 from .utils import load_room_name, save_room_secret_key, get_room_secret
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
 from django.views.decorators.http import require_POST, require_GET
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 @require_POST
@@ -34,6 +35,7 @@ def create_chat_room(request):
     return JsonResponse({"room_id": room.room_id, "room_name": room.room_name})
 
 
+@require_GET
 def generate_TOTP(request, room_id):
     """
     req: 채팅방 생성 완료 -> 6자리 코드 필요
@@ -50,3 +52,25 @@ def generate_TOTP(request, room_id):
 
     # 3. totp 프론트엔드로 반환
     return JsonResponse({"totp": code, "interval": totp.interval})
+
+
+@require_GET
+def list_messages(request, room_name):
+    """
+    채팅방 이름으로 최근 메시지를 조회
+    """
+
+    room = get_object_or_404(ChatRoom, room_name=room_name)
+    messages = room.messages.all()
+
+    payload = [
+        {
+            "id": message.id,
+            "username": message.username,
+            "content": message.content,
+            "created_at": message.created_at.isoformat(),
+        }
+        for message in messages
+    ]
+
+    return JsonResponse({"messages": payload})
