@@ -25,9 +25,11 @@ def get_master_key() -> bytes:
 
 # 의사 난수 생성
 def generate_pseudo_number():
-    secret_key = token_bytes(32) # 채팅방 고유 비밀키
-    iv = token_bytes(12) # 초기화 벡터 (12 Bytes 권장)
+    # ✅ TOTP용 비밀키는 base32 문자열로 생성
+    secret_str = pyotp.random_base32()   # 예: "JBSWY3DPEHPK3PXP"
+    secret_key = secret_str.encode("ascii")  # 암호화에 쓸 바이트
 
+    iv = token_bytes(12)  # 초기화 벡터 (12 bytes 권장)
     return secret_key, iv
 
 # AES-GCM 암호화 및 Base64 인코딩
