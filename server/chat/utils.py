@@ -4,16 +4,6 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFou
 from django.shortcuts import get_object_or_404
 from .models import SecureData, ChatRoom
 from .crypto_utils import decrypt_aes_gcm
-from django.conf import settings
-from functools import lru_cache
-
-# 마스터키 가져오기
-@lru_cache(maxsize=1)
-def get_master_key() -> bytes:
-    key = getattr(settings, "MASTER_KEY", None)
-    if key is None:
-        raise RuntimeError("MASTER_KEY not configured in settings")
-    return key
 
 # POST 요청으로 서버에 room_name 전달
 def load_room_name(request):

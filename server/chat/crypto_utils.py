@@ -1,8 +1,27 @@
 import base64
+import os
+from functools import lru_cache
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from .utils import get_master_key
+from django.conf import settings
 import pyotp
 from secrets import token_bytes
+
+
+# 마스터키 가져오기 (.env의 MASTER_KEY_B64에 의존)
+@lru_cache(maxsize=1)
+def get_master_key() -> bytes:
+    key = getattr(settings, "MASTER_KEY", None)
+    if key is None:
+        b64_key = os.environ.get("MASTER_KEY_B64")
+        if b64_key:
+            try:
+                key = base64.b64decode(b64_key)
+            except Exception as exc:
+                raise RuntimeError("MASTER_KEY_B64 is not valid base64") from exc
+
+    if key is None or len(key) not in (16, 24, 32):
+        raise RuntimeError("MASTER_KEY not configured in settings or .env")
+    return key
 
 # 의사 난수 생성
 def generate_pseudo_number():
