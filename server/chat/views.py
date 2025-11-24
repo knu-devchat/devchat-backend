@@ -1,3 +1,4 @@
+import base64
 import pyotp
 from .crypto_utils import encrypt_aes_gcm, decrypt_aes_gcm, generate_pseudo_number
 from .utils import load_room_name, save_room_secret_key, get_room_secret
@@ -40,11 +41,16 @@ def generate_access_totp(request, room_id):
         if encrypted is None:
             return JsonResponse({"success": False, "error": "room not found"}, status=404)
 
+        # AES-GCM 복호화 -> raw 32 bytes
         secret = decrypt_aes_gcm(encrypted)
         if not secret:
             return JsonResponse({"success": False, "error": "secret decrypt fail"}, status=500)
 
-        totp = pyotp.TOTP(secret, interval=30)
+        # Base32 인코딩
+        secret_b32 = base64.b32encode(secret).decode('utf-8')
+
+        # TOTP 생성
+        totp = pyotp.TOTP(secret_b32, interval=30)
         code = totp.now()
 
         return JsonResponse({"success": True, "totp": code, "interval": 30})
