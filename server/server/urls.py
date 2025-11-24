@@ -21,6 +21,7 @@ from login import views as login_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', login_views.home, name='home'),
+    path('api/chat/', include('chat.urls')),
     path('accounts/', include('allauth.urls')),
     path('accounts/', include('login.urls')),
 ]
