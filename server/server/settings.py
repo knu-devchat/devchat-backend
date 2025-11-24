@@ -98,6 +98,12 @@ SOCIALACCOUNT_ONLY = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
+# 깃허브 로그인 시 자동으로 계정 연결 및 생성
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
 MIDDLEWARE = [
     # cors 설정
     'corsheaders.middleware.CorsMiddleware',
