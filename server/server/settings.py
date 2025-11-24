@@ -70,7 +70,10 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 LOGIN_REDIRECT_URL = 'http://localhost:5173/dashboard' # 로그인 성공 후 띄울 페이지
-LOGOUT_REDIRECT_URL = 'http://localhost:5173/login' # 로그아웃 후 띄울 페이지
+# allauth 로그아웃 설정
+ACCOUNT_LOGOUT_REDIRECT_URL = 'http://localhost:5173/login'
+ACCOUNT_LOGOUT_ON_GET = True
+ACCOUNT_LOGOUT_ON_POST_REDIRECT_URL = 'http://localhost:5173/login'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
