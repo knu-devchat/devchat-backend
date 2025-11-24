@@ -51,10 +51,9 @@ def get_room_secret(room_id):
     secure = SecureData.objects.filter(room=room).order_by("-created_at").first()
     if not secure:
         return None
-    
+
     try:
-        master_key = get_master_key()
-        secret_bytes = decrypt_aes_gcm(master_key, secure.encrypted_value)
+        secret_bytes = decrypt_aes_gcm(secure.encrypted_value)
         secret = secret_bytes.decode()
     except Exception:
         return None
