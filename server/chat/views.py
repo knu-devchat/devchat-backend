@@ -5,8 +5,13 @@ from .utils import load_room_name, save_room_secret_key, get_room_secret
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
 from django.views.decorators.http import require_POST, require_GET
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+import json
+
 
 # Create your views here.
+
+@csrf_exempt          # ✅ CSRF 검사 끔 (Postman에서 테스트하려고)
 @require_POST
 def create_chat_room(request):
     """
@@ -59,7 +64,6 @@ def list_messages(request, room_name):
     """
     채팅방 이름으로 최근 메시지를 조회
     """
-
     room = get_object_or_404(ChatRoom, room_name=room_name)
     messages = room.messages.all()
 
