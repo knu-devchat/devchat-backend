@@ -3,7 +3,7 @@ from . import views
 
 app_name = "login"
 
-# endpoint: auth/
+# endpoint: ''
 urlpatterns = [
     path('', views.home, name='home'),
     path('logout/', views.logout_view, name='logout'),

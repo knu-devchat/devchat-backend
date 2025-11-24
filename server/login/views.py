@@ -1,10 +1,3 @@
-from django.shortcuts import redirect
-from django.contrib.auth import logout as auth_logout, login as auth_login
-from django.conf import settings
-from django.http import JsonResponse
-from urllib.parse import urlencode
-import requests
-from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout as auth_logout
 from django.conf import settings
