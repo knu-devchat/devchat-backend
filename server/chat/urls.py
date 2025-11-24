@@ -3,7 +3,8 @@ from . import views
 
 app_name = "chat"
 
+# endpoint: api/chat/
 urlpatterns = [
-    path('create-chat-room/', views.create_chat_room, name='create_chat_room'),
-    path('generate-totp/', views.generate_TOTP, name='generate_TOTP'),
+    path('chat-rooms/', views.create_chat_room, name='create_chat_room'),
+    path('chat-rooms/<int:room_id>/access-code/', views.generate_access_totp, name='generate_access_totp'),
 ]

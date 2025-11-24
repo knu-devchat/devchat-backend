@@ -23,5 +23,5 @@ urlpatterns = [
     path('', login_views.home, name='home'),
     path('auth/', include('allauth.urls')),
     path('auth/', include('login.urls')),
-    #path('api/chat/', include('chat.urls')),
+    path('api/chat/', include('chat.urls')),
 ]
