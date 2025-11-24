@@ -5,7 +5,31 @@ from django.http import JsonResponse
 from urllib.parse import urlencode
 import requests
 from django.contrib.auth.models import User
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout as auth_logout
+from django.conf import settings
+from django.http import JsonResponse
 
+def home(request):
+    return render(request, 'index.html')
+
+def logout_view(request):
+    auth_logout(request)
+    return redirect('/')
+
+def current_user(request):
+    """현재 로그인된 사용자 정보 반환"""
+    if request.user.is_authenticated:
+        return JsonResponse({
+            'id': request.user.id,
+            'username': request.user.username,
+            'email': request.user.email,
+            'is_authenticated': True,
+        })
+    else:
+        return JsonResponse({'is_authenticated': False}, status=401)
+
+# github_login, github_callback 함수들 모두 제거
 # Github OAuth 로그인 시작
 def github_login(request):
     params = {

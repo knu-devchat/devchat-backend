@@ -20,7 +20,7 @@ from login import views as login_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/', include('allauth.urls')),
+    path('accounts/', include('allauth.urls')),
     path('auth/', include('login.urls')),
     path('api/chat/', include('chat.urls')),
 ]
