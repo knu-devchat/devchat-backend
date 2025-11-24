@@ -47,7 +47,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'channels',
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     # local apps
     'login',
     'chat',
+    'channels',
 
     # allauth 관련 (github oauth 설정에 필요)
     'allauth',
