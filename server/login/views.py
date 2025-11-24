@@ -72,5 +72,5 @@ def github_callback(request):
     auth_login(request, user)
     
     # 5. 프론트엔드로 리다이렉트
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5137')
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     return redirect(f"{frontend_url}/dashboard")
