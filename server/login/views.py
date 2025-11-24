@@ -1,5 +1,6 @@
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.middleware.csrf import get_token
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout as auth_logout
 from django.conf import settings
@@ -35,7 +36,13 @@ def github_auth_url(request):
         params['next'] = next_url
     qs = urlencode(params)
     full = request.build_absolute_uri(login_path) + ('?' + qs if qs else '')
-    return JsonResponse({'login_url': full})
+    
+    # CSRF 토큰도 함께 반환
+    csrf_token = get_token(request)
+    return JsonResponse({
+        'login_url': full,
+        'csrf_token': csrf_token
+    })
 
 def logout_url(request):
     try:
