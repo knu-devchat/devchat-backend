@@ -1,8 +1,7 @@
-from django.shortcuts import render
 import pyotp
-from .crypto_utils import encrypt_aes_gcm, generate_pseudo_number
+from .crypto_utils import encrypt_aes_gcm, decrypt_aes_gcm, generate_pseudo_number
 from .utils import load_room_name, save_room_secret_key, get_room_secret
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
+from django.http import JsonResponse, HttpResponseNotFound
 from django.views.decorators.http import require_POST, require_GET
 
 # Create your views here.

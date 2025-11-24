@@ -46,6 +46,7 @@ def save_room_secret_key(room_name: str, encrypted: str):
 
     return room
 
+# 채팅방 고유 비밀키 얻기
 def get_room_secret(room_id):
     room = get_object_or_404(ChatRoom, room_id=room_id)
     secure = SecureData.objects.filter(room=room).order_by("-created_at").first()
