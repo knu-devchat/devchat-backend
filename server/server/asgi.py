@@ -1,14 +1,31 @@
 """
 ASGI config for server project.
 
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
+This config uses Django Channels to handle both HTTP and WebSocket.
 """
 
 import os
 
+from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+
+import chat.routing  # ★ chat.routing.websocket_urlpatterns 사용
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 
-from .routing import application
+# HTTP용 기존 Django ASGI 앱
+django_asgi_app = get_asgi_application()
+
+# Channels 라우터
+application = ProtocolTypeRouter(
+    {
+        # HTTP 요청은 Django가 처리
+        "http": django_asgi_app,
+
+        # WebSocket 요청은 chat.routing으로 라우팅
+        "websocket": AuthMiddlewareStack(
+            URLRouter(chat.routing.websocket_urlpatterns)
+        ),
+    }
+)
