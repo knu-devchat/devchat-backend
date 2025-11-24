@@ -5,9 +5,10 @@ app_name = "login"
 
 urlpatterns = [
     # Custom simple login/logout pages
-    path('login/', views.login, name='login'),
+    path('', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
+    path('home/', views.home, name='home'),
     # API endpoints for frontend-driven OAuth
-    path('api/auth/github/url/', views.github_auth_url, name='api_github_auth_url'),
-    path('api/auth/logout-url/', views.logout_url, name='api_logout_url'),
+    path('github/login/', views.github_login, name='github_login'),
+    path('github/callback/', views.github_callback, name='github_callback'),
 ]
