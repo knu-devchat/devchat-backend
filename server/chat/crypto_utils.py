@@ -28,7 +28,7 @@ def get_master_key() -> bytes:
 
     return key
 
-
+# 채팅방 고유 TOTP 비밀키 생성
 def generate_pseudo_number():
     """
     채팅방 고유 TOTP 비밀키 생성:
@@ -44,7 +44,7 @@ def generate_pseudo_number():
 
     return secret_key, iv
 
-
+# AES-GCM 암호화/복호화 함수
 def encrypt_aes_gcm(secret_key: bytes, iv: bytes) -> str:
     """
     AES-GCM으로 secret_key 를 암호화하고,

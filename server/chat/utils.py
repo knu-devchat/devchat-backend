@@ -34,7 +34,7 @@ def load_room_name(request):
     room_name = room_name.strip()[:50]
     return room_name
 
-
+#테이블에 암호문 저장
 def save_room_secret_key(room_name: str, encrypted: str):
     """
     ChatRoom, SecureData를 트랜잭션으로 함께 저장.
@@ -61,6 +61,7 @@ def save_room_secret_key(room_name: str, encrypted: str):
     return room
 
 
+#totp 코드 필요할 때 암호문 가져와서 복호화
 def get_room_secret(room_id):
     """
     room_id로 ChatRoom과 SecureData를 찾고,

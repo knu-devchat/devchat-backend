@@ -51,7 +51,7 @@ def generate_TOTP(request, room_id):
     if secret is None:
         return HttpResponseNotFound("secret not found")
     
-    # 2. 가져온 비밀키로 totp 생성
+    # 2. 가져온 비밀키로 totp 생성, 6자리 코드 생성 -> 이 값을 api로 프론트에 내려줌
     totp = pyotp.TOTP(secret)
     code = totp.now()
 
