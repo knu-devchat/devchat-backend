@@ -70,7 +70,7 @@ INSTALLED_APPS = [
 
 # 로그인/로그아웃 페이지 url 넣으면 됨
 SITE_ID = 1
-LOGIN_REDIRECT_URL = 'http://localhost:5137/dashboard/'
+LOGIN_REDIRECT_URL = 'http://localhost:8000/auth/github/callback/'
 LOGOUT_REDIRECT_URL = '/'
 
 AUTHENTICATION_BACKENDS = [
