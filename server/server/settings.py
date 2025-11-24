@@ -68,10 +68,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
 ]
 
-# 로그인/로그아웃 페이지 url 넣으면 됨
 SITE_ID = 1
-LOGIN_REDIRECT_URL = 'http://localhost:5173/dashboard'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'http://localhost:5173/dashboard' # 로그인 성공 후 띄울 페이지
+LOGOUT_REDIRECT_URL = 'http://localhost:5173/login' # 로그아웃 후 띄울 페이지
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
