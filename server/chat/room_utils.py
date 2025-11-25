@@ -3,7 +3,8 @@ from django.db import IntegrityError, transaction
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import get_object_or_404
 from .models import SecureData, ChatRoom
-from .crypto_helpers import get_master_key
+from .crypto_utils import decrypt_aes_gcm
+
 
 # POST 요청으로 서버에 room_name 전달
 def load_room_name(request):
@@ -44,10 +45,6 @@ def get_room_secret(room_id):
         return None
     
     try:
-        master_key = get_master_key()
-        # import crypto function locally to avoid circular imports at module import time
-        from .crypto_utils import decrypt_aes_gcm
-
         secret_bytes = decrypt_aes_gcm(secure.encrypted_value)
         secret = secret_bytes.decode('utf-8')
     except Exception:
