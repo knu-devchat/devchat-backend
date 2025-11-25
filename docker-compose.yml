@@ -8,23 +8,23 @@ services:
     env_file:
       - .env
     environment:
-      - ALLOWED_HOSTS=localhost,127.0.0.1,web
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/devchat
+      - ALLOWED_HOSTS=localhost,127.0.0.1,web,0.0.0.0
+      - USE_REDIS=false  # InMemory Channel Layer 사용
     volumes:
       - .:/app
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=devchat
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - sqlite_data:/app/server  # SQLite DB 파일 보존
+    command: >
+      sh -c "
+      python server/manage.py migrate &&
+      python server/manage.py shell -c \"
+      from django.contrib.sites.models import Site;
+      from allauth.socialaccount.models import SocialApp;
+      site, created = Site.objects.get_or_create(pk=1, defaults={'domain': 'localhost:8000', 'name': 'DevChat'});
+      SocialApp.objects.filter(provider='github').delete();
+      github_app = SocialApp.objects.create(provider='github', name='GitHub', client_id='Ov23li89SQFzsszAcpkO', secret='fd31dfb8ab7438f85809c5a88056d9e8d90dad68');
+      github_app.sites.add(site);
+      print('OAuth setup complete');
+      \" && python server/manage.py runserver 0.0.0.0:8000"
 
 volumes:
-  postgres_data:
+  sqlite_data:  # SQLite 데이터 보존용 볼륨

@@ -16,11 +16,25 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from login import views as login_views
+from django.http import JsonResponse
+
+def api_home(request):
+    """API 홈페이지"""
+    return JsonResponse({
+        'message': 'DevChat Backend API',
+        'status': 'running',
+        'endpoints': {
+            'admin': '/admin/',
+            'github_login': '/accounts/github/login/',
+            'api_chat': '/api/chat/',
+            'api_user': '/api/user/',
+        }
+    })
 
 urlpatterns = [
+    path('', api_home, name='api_home'),
     path('admin/', admin.site.urls),
-    path('accounts/', include('allauth.urls')),
     path('api/chat/', include('chat.urls')),
-    path('', include('login.urls')),
+    path('api/user/', include('login.urls')),
+    path('accounts/', include('allauth.urls')),
 ]
