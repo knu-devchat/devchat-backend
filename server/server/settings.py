@@ -39,18 +39,12 @@ if len(MASTER_KEY) not in (16, 24, 32):
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-<<<<<<< HEAD
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+DEBUG = os.environ.get('DEBUG', 'False').lower == 'true'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 CORS_ALLOWED_ALL_ORIGINS = os.environ.get('CORS_ALLOWED_ALL_ORIGINS', 'False').lower() == 'true'
 if not CORS_ALLOWED_ALL_ORIGINS:
     CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
-=======
-DEBUG = True
-
-ALLOWED_HOSTS = []
->>>>>>> aa86fcd1708c60b979c5f1211a46b386f9d386f2
 
 
 # Application definition
@@ -63,11 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
     'corsheaders',
-
-=======
->>>>>>> aa86fcd1708c60b979c5f1211a46b386f9d386f2
     # local apps
     'login',
     'chat',
