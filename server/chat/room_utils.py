@@ -1,12 +1,7 @@
 # utils.py
 import json
 from django.db import IntegrityError, transaction
-from django.http import (
-    JsonResponse,
-    HttpResponseBadRequest,
-    HttpResponseNotFound,
-    HttpResponseServerError,
-)
+from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import get_object_or_404
 
 from .models import SecureData, ChatRoom
@@ -60,8 +55,7 @@ def save_room_secret_key(room_name: str, encrypted: str):
 
     return room
 
-
-#totp 코드 필요할 때 암호문 가져와서 복호화
+# 채팅방 고유 비밀키 얻기
 def get_room_secret(room_id):
     """
     room_id로 ChatRoom과 SecureData를 찾고,
@@ -76,7 +70,12 @@ def get_room_secret(room_id):
         .first()
     )
     if not secure:
-        print(f"[DEBUG] No SecureData for room_id={room_id}")
+        return None
+    
+    try:
+        secret_bytes = decrypt_aes_gcm(secure.encrypted_value)
+        secret = secret_bytes.decode('utf-8')
+    except Exception:
         return None
 
     try:

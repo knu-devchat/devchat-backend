@@ -39,9 +39,12 @@ if len(MASTER_KEY) not in (16, 24, 32):
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+DEBUG = os.environ.get('DEBUG', 'False').lower == 'true'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+CORS_ALLOWED_ALL_ORIGINS = os.environ.get('CORS_ALLOWED_ALL_ORIGINS', 'False').lower() == 'true'
+if not CORS_ALLOWED_ALL_ORIGINS:
+    CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
 
 
 # Application definition
@@ -54,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     # local apps
     'login',
     'chat',
@@ -66,10 +70,12 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
 ]
 
-# 로그인/로그아웃 페이지 url 넣으면 됨
 SITE_ID = 1
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'http://localhost:5173/dashboard' # 로그인 성공 후 띄울 페이지
+# allauth 로그아웃 설정
+ACCOUNT_LOGOUT_REDIRECT_URL = 'http://localhost:5173/login'
+ACCOUNT_LOGOUT_ON_GET = True
+ACCOUNT_LOGOUT_ON_POST_REDIRECT_URL = 'http://localhost:5173/login'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -96,12 +102,22 @@ SOCIALACCOUNT_ONLY = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
+# 깃허브 로그인 시 자동으로 계정 연결 및 생성
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
 MIDDLEWARE = [
+    # cors 설정
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     # allauth 설정 추가
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',

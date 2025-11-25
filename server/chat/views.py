@@ -1,80 +1,63 @@
+import base64
 import pyotp
-from .crypto_utils import encrypt_aes_gcm, generate_pseudo_number
-from .models import ChatRoom
-from .utils import load_room_name, save_room_secret_key, get_room_secret
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
+from .crypto_utils import encrypt_aes_gcm, decrypt_aes_gcm, generate_pseudo_number
+from .room_utils import load_room_name, save_room_secret_key, get_room_secret
+from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 import json
 
 
-# Create your views here.
-
-@csrf_exempt          # ✅ CSRF 검사 끔 (Postman에서 테스트하려고)
 @require_POST
 def create_chat_room(request):
     """
     req: room_name 전달
-    res:
-        - DB ChatRoom에 room_id, room_name 저장
-        - DB SecureData에 암호화된 채팅방 비밀키 저장
+    res: room_id, room_name 반환
     """
-    # 1. 채팅방 이름 전달
-    room_name = load_room_name(request)
+    try:
+        room_name = load_room_name(request)
+        if not room_name:
+            return JsonResponse({"success": False, "error": "room_name not provided"}, status=400)
 
-    # 2. 의사 난수 생성
-    secret_key, iv = generate_pseudo_number()
+        secret_key, iv = generate_pseudo_number()
+        encrypted = encrypt_aes_gcm(secret_key, iv)
 
-    # 3. 채팅방 고유 비밀키 암호화
-    encrypted = encrypt_aes_gcm(secret_key, iv)
+        room_or_resp = save_room_secret_key(room_name, encrypted)
+        if hasattr(room_or_resp, "status_code"):
+            return room_or_resp  # 에러 HttpResponse 그대로 반환
 
-    # 4. 채팅방 고유 비밀키 DB에 저장
-    room_or_resp = save_room_secret_key(room_name, encrypted)
-    if hasattr(room_or_resp, "status_code"):
-        # save_room_secret_key가 HttpResponse(에러)를 반환한 경우 그대로 반환
-        return room_or_resp
+        room = room_or_resp
+        return JsonResponse({"success": True, "room_id": room.room_id, "room_name": room.room_name})
 
-    # 성공: room_or_resp는 ChatRoom 인스턴스
-    room = room_or_resp
-    return JsonResponse({"room_id": room.room_id, "room_name": room.room_name})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
 @require_GET
-def generate_TOTP(request, room_id):
+def generate_access_totp(request, room_id):
     """
-    req: 채팅방 생성 완료 -> 6자리 코드 필요
+    req: totp 필요 시 프론트가 요청 (채팅방 생성할 때, 채팅방에서 totp 생성할 때)
     res: 6자리 코드 반환
     """
-    # 1. DB에서 비밀키 가져와서 복호화
-    secret = get_room_secret(room_id)
-    if secret is None:
-        return HttpResponseNotFound("secret not found")
-    
-    # 2. 가져온 비밀키로 totp 생성, 6자리 코드 생성 -> 이 값을 api로 프론트에 내려줌
-    totp = pyotp.TOTP(secret)
-    code = totp.now()
+    try:
+        encrypted = get_room_secret(room_id)
+        if encrypted is None:
+            return JsonResponse({"success": False, "error": "room not found"}, status=404)
 
-    # 3. totp 프론트엔드로 반환
-    return JsonResponse({"totp": code, "interval": totp.interval})
+        # AES-GCM 복호화 -> raw 32 bytes
+        secret = decrypt_aes_gcm(encrypted)
+        if not secret:
+            return JsonResponse({"success": False, "error": "secret decrypt fail"}, status=500)
 
+        # Base32 인코딩
+        secret_b32 = base64.b32encode(secret).decode('utf-8')
 
-@require_GET
-def list_messages(request, room_name):
-    """
-    채팅방 이름으로 최근 메시지를 조회
-    """
-    room = get_object_or_404(ChatRoom, room_name=room_name)
-    messages = room.messages.all()
+        # TOTP 생성
+        totp = pyotp.TOTP(secret_b32, interval=30)
+        code = totp.now()
 
-    payload = [
-        {
-            "id": message.id,
-            "username": message.username,
-            "content": message.content,
-            "created_at": message.created_at.isoformat(),
-        }
-        for message in messages
-    ]
+        return JsonResponse({"success": True, "totp": code, "interval": 30})
 
-    return JsonResponse({"messages": payload})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
