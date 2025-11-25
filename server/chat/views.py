@@ -1,7 +1,7 @@
 import base64
 import pyotp
 from .crypto_utils import encrypt_aes_gcm, decrypt_aes_gcm, generate_pseudo_number
-from .utils import load_room_name, save_room_secret_key, get_room_secret
+from .room_utils import load_room_name, save_room_secret_key, get_room_secret
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 
