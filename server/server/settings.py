@@ -39,7 +39,7 @@ if len(MASTER_KEY) not in (16, 24, 32):
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower == 'true'
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 CORS_ALLOWED_ALL_ORIGINS = os.environ.get('CORS_ALLOWED_ALL_ORIGINS', 'False').lower() == 'true'
 if not CORS_ALLOWED_ALL_ORIGINS:
@@ -57,11 +57,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+
     # local apps
     'login',
     'chat',
 
     # allauth 관련 (github oauth 설정에 필요)
+    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -112,10 +114,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     # allauth 설정 추가
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
