@@ -1,59 +1,67 @@
 import json
+
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+
+from .models import ChatRoom, Message
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        # Try to get the room name from the URL route kwargs (normal case).
-        # If it's missing (some routing misconfiguration), fall back to parsing
-        # the path (e.g. /ws/chat/<room>/) to avoid KeyError and reject
-        # gracefully if we still can't determine a room.
-        url_route = self.scope.get("url_route") or {}
-        kwargs = url_route.get("kwargs") or {}
-        room = kwargs.get("room")
-        if not room:
-            # Fallback: try to parse from scope['path']
-            path = self.scope.get("path", "")
-            # Expecting something like /ws/chat/<room>/
-            parts = [p for p in path.split("/") if p]
-            try:
-                # parts = ['ws', 'chat', '<room>']
-                room = parts[2]
-            except Exception:
-                # Could not determine room: reject the connection
-                await self.close()
-                return
+        self.room_name = self.scope["url_route"]["kwargs"].get("room_name")
+        self.room_group_name = f"chat_{self.room_name}"
+        self.room = await self._get_or_create_room(self.room_name)
 
-        self.room = room
-        self.group_name = f"chat_{self.room}"
-
-        # Use the group_name when adding to channel layer groups.
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-        await self.channel_layer.group_send(
-            self.group_name,
-            {
-                "type": "chat.message",
-                "message": f"[SYSTEM] joined room: {self.room}",
-            }
-        )
-
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-        msg = data["message"]
+    async def receive(self, text_data=None, bytes_data=None):
+        if not text_data:
+            return
 
+        try:
+            data = json.loads(text_data)
+        except json.JSONDecodeError:
+            return
+
+        message = data.get("message")
+        username = data.get("username", "")
+        if not message:
+            return
+
+        stored_message = await self._save_message(self.room, username, message)
+        
         await self.channel_layer.group_send(
-            self.group_name,
+            self.room_group_name,
             {
-                "type": "chat.message",
-                "message": msg,
-            }
+                "type": "chat_message",
+                "message": message,
+                "username": username,
+                "message_id": stored_message.id,
+                "created_at": stored_message.created_at.isoformat(),
+            },
         )
 
     async def chat_message(self, event):
-        await self.send(text_data=json.dumps({
-            "message": event["message"]
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "message": event.get("message"),
+                    "username": event.get("username", ""),
+                    "message_id": event.get("message_id"),
+                    "created_at": event.get("created_at"),
+                }
+            )
+        )
+
+    @database_sync_to_async
+    def _get_or_create_room(self, room_name: str) -> ChatRoom:
+        room, _ = ChatRoom.objects.get_or_create(room_name=room_name)
+        return room
+
+    @database_sync_to_async
+    def _save_message(self, room: ChatRoom, username: str, content: str) -> Message:
+        return Message.objects.create(room=room, username=username, content=content)
