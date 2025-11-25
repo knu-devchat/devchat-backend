@@ -1,7 +1,7 @@
 import base64
 import pyotp
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from .utils import get_master_key
+from .crypto_helpers import get_master_key
 from os import environ
 from secrets import token_bytes
 from dotenv import load_dotenv

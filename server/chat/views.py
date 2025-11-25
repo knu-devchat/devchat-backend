@@ -33,8 +33,8 @@ def create_chat_room(request):
 @require_GET
 def generate_access_totp(request, room_id):
     """
-    req: 채팅방 입장 시 프론트가 요청
-    res: 6자리 코드 반환 + interval
+    req: totp 필요 시 프론트가 요청 (채팅방 생성할 때, 채팅방에서 totp 생성할 때)
+    res: 6자리 코드 반환
     """
     try:
         encrypted = get_room_secret(room_id)

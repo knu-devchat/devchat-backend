@@ -1,18 +1,8 @@
 import json
 from django.db import IntegrityError, transaction
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseServerError
+from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import get_object_or_404
 from .models import SecureData, ChatRoom
-from django.conf import settings
-from functools import lru_cache
-
-# 마스터키 가져오기
-@lru_cache(maxsize=1)
-def get_master_key() -> bytes:
-    key = getattr(settings, "MASTER_KEY", None)
-    if key is None:
-        raise RuntimeError("MASTER_KEY not configured in settings")
-    return key
 
 # POST 요청으로 서버에 room_name 전달
 def load_room_name(request):
