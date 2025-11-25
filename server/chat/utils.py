@@ -3,6 +3,7 @@ from django.db import IntegrityError, transaction
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import get_object_or_404
 from .models import SecureData, ChatRoom
+from .crypto_helpers import get_master_key
 
 # POST 요청으로 서버에 room_name 전달
 def load_room_name(request):
